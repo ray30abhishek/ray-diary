@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ray Dairy - Login</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#e3f2fd;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.login-box{
+    background:white;
+    width:90%;
+    max-width:400px;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 5px 20px #aaa;
+    text-align:center;
+}
+
+.logo{
+    font-size:45px;
+}
+
+h1{
+    color:#1976d2;
+    margin:10px 0 5px;
+}
+
+.subtitle{
+    color:#666;
+    margin-bottom:20px;
+}
+
+select,
+input{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:7px;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:12px;
+    border:none;
+    border-radius:7px;
+    background:#1976d2;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#125ca5;
+}
+
+#error{
+    color:red;
+    margin-top:12px;
+    display:none;
+}
+
+.info{
+    margin-top:20px;
+    padding:10px;
+    background:#f1f8ff;
+    border-radius:7px;
+    font-size:13px;
+    color:#555;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <div class="logo">🥛</div>
+
+    <h1>Ray Dairy</h1>
+
+    <p class="subtitle">Business Dashboard Login</p>
+
+
+    <!-- ROLE -->
+
+    <select id="role">
+
+        <option value="Owner">
+            👑 Owner
+        </option>
+
+        <option value="Manager">
+            👔 Manager
+        </option>
+
+        <option value="Staff">
+            👨‍💼 Staff
+        </option>
+
+        <option value="Chartered Accountant">
+            🧮 Chartered Accountant
+        </option>
+
+    </select>
+
+
+    <!-- USERNAME -->
+
+    <input
+        type="text"
+        id="username"
+        placeholder="Username"
+    >
+
+
+    <!-- PASSWORD -->
+
+    <input
+        type="password"
+        id="password"
+        placeholder="Password"
+    >
+
+
+    <button onclick="login()">
+        🔐 Login
+    </button>
+
+
+    <p id="error">
+        ❌ Wrong username, password or role
+    </p>
+
+
+    <div class="info">
+
+        <b>Default Login</b><br><br>
+
+        Owner: owner / owner123<br>
+        Manager: manager / manager123<br>
+        Staff: staff / staff123<br>
+        CA: ca / ca123
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+================================
+RAY DAIRY LOGIN SYSTEM
+================================
+*/
+
+
+/* DEFAULT ACCOUNTS */
+
+const defaultAccounts = {
+
+    Owner:{
+        username:"owner",
+        password:"owner123"
+    },
+
+    Manager:{
+        username:"manager",
+        password:"manager123"
+    },
+
+    Staff:{
+        username:"staff",
+        password:"staff123"
+    },
+
+    "Chartered Accountant":{
+        username:"ca",
+        password:"ca123"
+    }
+
+};
+
+
+/*
+================================
+LOAD SAVED ACCOUNTS
+================================
+*/
+
+let savedAccounts =
+JSON.parse(
+    localStorage.getItem("rayDairyAccounts")
+);
+
+
+/*
+If accounts don't exist,
+create default accounts.
+*/
+
+if(!savedAccounts){
+
+    savedAccounts = defaultAccounts;
+
+    localStorage.setItem(
+        "rayDairyAccounts",
+        JSON.stringify(savedAccounts)
+    );
+
+}
+
+
+/*
+================================
+LOGIN FUNCTION
+================================
+*/
+
+function login(){
+
+    let role =
+    document.getElementById("role").value;
+
+    let username =
+    document.getElementById("username").value.trim();
+
+    let password =
+    document.getElementById("password").value;
+
+
+    /*
+    Get selected role account
+    */
+
+    let account =
+    savedAccounts[role];
+
+
+    /*
+    Check login
+    */
+
+    if(
+        account &&
+        account.username === username &&
+        account.password === password
+    ){
+
+        /*
+        Save current login
+        */
+
+        localStorage.setItem(
+            "rayDairyRole",
+            role
+        );
+
+        localStorage.setItem(
+            "rayDairyUsername",
+            username
+        );
+
+
+        /*
+        Go to dashboard
+        */
+
+        window.location.href =
+        "dashboard.html";
+
+    }
+
+    else{
+
+        document.getElementById("error")
+        .style.display="block";
+
+    }
+
+}
+
+
+/*
+================================
+ENTER KEY LOGIN
+================================
+*/
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Enter"){
+
+            login();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ray Dairy Dashboard</title>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  color:#222;
+}
+
+.header{
+  background:#198754;
+  color:white;
+  padding:25px;
+  text-align:center;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 3px 10px #0002;
+  text-align:center;
+}
+
+.card h2{
+  color:#198754;
+  margin:10px 0;
+}
+
+.section{
+  background:white;
+  margin-top:20px;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 3px 10px #0002;
+}
+
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+
+button{
+  background:#198754;
+  color:white;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+.delete{
+  background:#dc3545;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th{
+  background:#198754;
+  color:white;
+}
+
+.bill{
+  margin-top:20px;
+  border:2px solid #198754;
+  padding:20px;
+  border-radius:10px;
+}
+
+.status{
+  font-weight:bold;
+  margin-top:10px;
+}
+
+@media(max-width:600px){
+
+  .container{
+    padding:10px;
+  }
+
+  table{
+    font-size:12px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>🐄 Ray Dairy</h1>
+
+<p>Milk Business Dashboard</p>
+
+</div>
+
+<div class="container">
+
+
+<!-- DASHBOARD CARDS -->
+
+<div class="cards">
+
+<div class="card">
+
+<h3>Total Milk</h3>
+
+<h2 id="totalMilk">0 L</h2>
+
+</div>
+
+
+<div class="card">
+
+<h3>Total Sales</h3>
+
+<h2 id="totalSales">₹0</h2>
+
+</div>
+
+
+<div class="card">
+
+<h3>Customers</h3>
+
+<h2 id="totalCustomers">0</h2>
+
+</div>
+
+
+<div class="card">
+
+<h3>Records</h3>
+
+<h2 id="totalRecords">0</h2>
+
+</div>
+
+</div>
+
+
+<!-- ADD SALE -->
+
+<div class="section">
+
+<h2>➕ Add Milk Sale</h2>
+
+<input
+id="customer"
+type="text"
+placeholder="Customer Name"
+>
+
+<input
+id="quantity"
+type="number"
+step="0.25"
+placeholder="Milk Quantity (Litre)"
+>
+
+<input
+id="price"
+type="number"
+value="70"
+placeholder="Price per Litre"
+>
+
+<button onclick="addSale()">
+
+Add Sale
+
+</button>
+
+<div
+id="status"
+class="status">
+</div>
+
+</div>
+
+
+<!-- SALES RECORDS -->
+
+<div class="section">
+
+<h2>📋 Sales Records</h2>
+
+<button onclick="loadSales()">
+
+🔄 Sync Records
+
+</button>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Customer</th>
+
+<th>Quantity</th>
+
+<th>Price</th>
+
+<th>Total</th>
+
+<th>Date</th>
+
+</tr>
+
+</thead>
+
+<tbody id="salesTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- CUSTOMERS -->
+
+<div class="section">
+
+<h2>👥 Customers</h2>
+
+<select id="customerList">
+
+<option value="">
+
+Select Customer
+
+</option>
+
+</select>
+
+<button
+class="delete"
+onclick="deleteCustomer()">
+
+🗑️ Delete Customer
+
+</button>
+
+</div>
+
+
+<!-- MONTHLY BILL -->
+
+<div class="section">
+
+<h2>🧾 Monthly Bill</h2>
+
+<select id="billCustomer">
+
+<option value="">
+
+Select Customer
+
+</option>
+
+</select>
+
+<input
+type="month"
+id="billMonth"
+>
+
+<button onclick="generateBill()">
+
+Generate Monthly Bill
+
+</button>
+
+<div id="billResult"></div>
+
+<button onclick="downloadBill()">
+
+⬇️ Download Bill
+
+</button>
+
+</div>
+
+</div>
+<script>
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbz4CfKwY1kO9BoIu448CxVRhvd8PichVURXzRN7BqUtWuuQatZMy1hMbYR1lzJNNfj3/exec";
+
+let sales = [];
+let currentBill = "";
+
+
+/* LOAD RECORDS */
+
+async function loadSales(){
+
+  try{
+
+    document.getElementById("status").innerText =
+    "Syncing...";
+
+    const response = await fetch(API_URL);
+
+    sales = await response.json();
+
+    displaySales();
+
+    updateDashboard();
+
+    updateCustomers();
+
+    document.getElementById("status").innerText =
+    "✅ Synced successfully";
+
+  }
+
+  catch(error){
+
+    document.getElementById("status").innerText =
+    "❌ Sync failed";
+
+    console.log(error);
+
+  }
+
+}
+
+
+/* DISPLAY SALES */
+
+function displaySales(){
+
+  const table =
+  document.getElementById("salesTable");
+
+  table.innerHTML = "";
+
+  sales.forEach(function(sale){
+
+    const row =
+    document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${sale.customer}</td>
+      <td>${sale.quantity} L</td>
+      <td>₹${sale.price}</td>
+      <td>₹${sale.total}</td>
+      <td>${new Date(sale.date).toLocaleDateString("en-IN")}</td>
+    `;
+
+    table.appendChild(row);
+
+  });
+
+}
+
+
+/* DASHBOARD */
+
+function updateDashboard(){
+
+  let milk = 0;
+  let money = 0;
+
+  sales.forEach(function(sale){
+
+    milk += Number(sale.quantity) || 0;
+
+    money += Number(sale.total) || 0;
+
+  });
+
+  const customers =
+  [...new Set(sales.map(s => s.customer))];
+
+  document.getElementById("totalMilk").innerText =
+  milk.toFixed(2) + " L";
+
+  document.getElementById("totalSales").innerText =
+  "₹" + money.toFixed(2);
+
+  document.getElementById("totalCustomers").innerText =
+  customers.length;
+
+  document.getElementById("totalRecords").innerText =
+  sales.length;
+
+}
+
+
+/* CUSTOMER LIST */
+
+function updateCustomers(){
+
+  const customers =
+  [...new Set(sales.map(s => s.customer))].sort();
+
+  const list =
+  document.getElementById("customerList");
+
+  const billList =
+  document.getElementById("billCustomer");
+
+  list.innerHTML =
+  '<option value="">Select Customer</option>';
+
+  billList.innerHTML =
+  '<option value="">Select Customer</option>';
+
+  customers.forEach(function(name){
+
+    list.innerHTML +=
+    `<option value="${name}">${name}</option>`;
+
+    billList.innerHTML +=
+    `<option value="${name}">${name}</option>`;
+
+  });
+
+}
+
+
+/* ADD SALE */
+
+async function addSale(){
+
+  const customer =
+  document.getElementById("customer").value.trim();
+
+  const quantity =
+  Number(document.getElementById("quantity").value);
+
+  const price =
+  Number(document.getElementById("price").value);
+
+  if(!customer || !quantity || !price){
+
+    alert("Please fill all details");
+
+    return;
+
+  }
+
+  const total = quantity * price;
+
+  try{
+
+    document.getElementById("status").innerText =
+    "Saving...";
+
+    const response = await fetch(API_URL,{
+
+      method:"POST",
+
+      body:JSON.stringify({
+
+        customer:customer,
+        quantity:quantity,
+        price:price,
+        total:total,
+        date:new Date().toISOString()
+
+      })
+
+    });
+
+    const result = await response.json();
+
+    if(result.success){
+
+      document.getElementById("customer").value = "";
+
+      document.getElementById("quantity").value = "";
+
+      document.getElementById("status").innerText =
+      "✅ Sale saved";
+
+      loadSales();
+
+    }
+
+  }
+
+  catch(error){
+
+    document.getElementById("status").innerText =
+    "❌ Save failed";
+
+    console.log(error);
+
+  }
+
+}
+
+
+/* DELETE CUSTOMER */
+
+async function deleteCustomer(){
+
+  const customer =
+  document.getElementById("customerList").value;
+
+  if(!customer){
+
+    alert("Select a customer first");
+
+    return;
+
+  }
+
+  if(!confirm(
+    "Delete all records of " + customer + "?"
+  )){
+
+    return;
+
+  }
+
+  try{
+
+    const response = await fetch(API_URL,{
+
+      method:"POST",
+
+      body:JSON.stringify({
+
+        action:"deleteCustomer",
+
+        customer:customer
+
+      })
+
+    });
+
+    const result = await response.json();
+
+    if(result.success){
+
+      alert(
+        "Customer deleted: " +
+        result.deleted +
+        " record(s)"
+      );
+
+      loadSales();
+
+    }
+
+  }
+
+  catch(error){
+
+    alert("Delete failed");
+
+  }
+
+}
+
+
+/* MONTHLY BILL */
+
+function generateBill(){
+
+  const customer =
+  document.getElementById("billCustomer").value;
+
+  const month =
+  document.getElementById("billMonth").value;
+
+  if(!customer || !month){
+
+    alert("Select customer and month");
+
+    return;
+
+  }
+
+  const filtered =
+  sales.filter(function(sale){
+
+    const date = new Date(sale.date);
+
+    const saleMonth =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth()+1).padStart(2,"0");
+
+    return (
+      sale.customer === customer &&
+      saleMonth === month
+    );
+
+  });
+
+  let totalMilk = 0;
+  let totalAmount = 0;
+
+  filtered.forEach(function(sale){
+
+    totalMilk += Number(sale.quantity);
+
+    totalAmount += Number(sale.total);
+
+  });
+
+  const monthName =
+  new Date(month + "-01").toLocaleDateString(
+    "en-IN",
+    {
+      month:"long",
+      year:"numeric"
+    }
+  );
+
+  currentBill =
+`RAY DAIRY
+Monthly Milk Bill
+
+Customer: ${customer}
+Month: ${monthName}
+
+Total Milk: ${totalMilk.toFixed(2)} L
+Total Amount: ₹${totalAmount.toFixed(2)}
+
+Total Records: ${filtered.length}
+
+Thank you for choosing Ray Dairy.`;
+
+
+  document.getElementById("billResult").innerHTML = `
+
+  <div class="bill">
+
+    <h2>RAY DAIRY</h2>
+
+    <p><b>Customer:</b> ${customer}</p>
+
+    <p><b>Month:</b> ${monthName}</p>
+
+    <hr>
+
+    <p>
+    <b>Total Milk:</b>
+    ${totalMilk.toFixed(2)} L
+    </p>
+
+    <p>
+    <b>Total Amount:</b>
+    ₹${totalAmount.toFixed(2)}
+    </p>
+
+    <p>
+    <b>Total Records:</b>
+    ${filtered.length}
+    </p>
+
+    <hr>
+
+    <p>Thank you for choosing Ray Dairy.</p>
+
+  </div>
+
+  `;
+
+}
+
+
+/* DOWNLOAD BILL */
+
+function downloadBill(){
+
+  if(!currentBill){
+
+    alert("First generate a bill");
+
+    return;
+
+  }
+
+  const blob =
+  new Blob(
+    [currentBill],
+    {type:"text/plain"}
+  );
+
+  const url =
+  URL.createObjectURL(blob);
+
+  const a =
+  document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+  "Ray-Dairy-Monthly-Bill.txt";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+
+/* START */
+
+loadSales();
+
+</script>
+
+</body>
+</html>

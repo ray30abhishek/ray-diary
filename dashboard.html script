@@ -754,6 +754,43 @@ function downloadBill(){
 loadSales();
 
 </script>
+<!-- Daily Bill -->
+<div class="section">
+  <h2>🧾 Daily Milk Bill</h2>
 
+  <p><b>Date:</b> <span id="dailyBillDate"></span></p>
+
+  <button onclick="generateDailyBill()">
+    Generate Today's Bill
+  </button>
+
+  <div id="dailyBillResult"></div>
+</div>
+
+<script>
+function generateDailyBill() {
+  const today = new Date().toISOString().split("T")[0];
+
+  const todaySales = sales.filter(function(item) {
+    return new Date(item.date).toISOString().split("T")[0] === today;
+  });
+
+  let totalMilk = 0;
+  let totalAmount = 0;
+
+  todaySales.forEach(function(item) {
+    totalMilk += Number(item.quantity);
+    totalAmount += Number(item.total);
+  });
+
+  document.getElementById("dailyBillDate").innerText =
+    new Date().toLocaleDateString("en-IN");
+
+  document.getElementById("dailyBillResult").innerHTML =
+    "<hr>" +
+    "<p><b>Total Milk:</b> " + totalMilk + " Litre</p>" +
+    "<p><b>Total Amount:</b> ₹" + totalAmount + "</p>";
+}
+</script>
 </body>
 </html>

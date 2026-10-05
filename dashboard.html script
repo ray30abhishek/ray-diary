@@ -754,7 +754,6 @@ function downloadBill(){
 loadSales();
 
 </script>
-<!-- Daily Bill -->
 <div class="section">
   <h2>🧾 Daily Milk Bill</h2>
 
@@ -766,7 +765,6 @@ loadSales();
 
   <div id="dailyBillResult"></div>
 </div>
-
 <script>
 function generateDailyBill() {
   const today = new Date().toISOString().split("T")[0];
